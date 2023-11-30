@@ -25,13 +25,13 @@ class ConnectFourGUI(QMainWindow):
             for col in range(self.columns):
                 if row == 0:
                     button = QPushButton()
-                    button.clicked.connect(lambda _, row=row, col=col: self.handle_button_click(row, col))
+                    button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
                     self.buttons.append(button)
                     layout.addWidget(button, row, col)
                     self.style_top_row(button)
                 else:
                     button = QPushButton()
-                    button.clicked.connect(lambda _, row=row, col=col: self.handle_button_click(row, col))
+                    button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
                     self.buttons.append(button)
                     layout.addWidget(button, row, col)
                     self.style_button(button)
@@ -62,18 +62,26 @@ class ConnectFourGUI(QMainWindow):
                 background-color: green;
             }
         """)
-
+    
     def handle_button_click(self, row, col):
         # Add logic to handle button click
         # such as update the board and redraw the GUI
         print(f"Button in row {row + 1}, column {col + 1} clicked")
+        check_winner()
         
+    
+    def check_winner():
+        #check board
+    
+    def drop_piece(board, player, coulm, row):
+        #board, player, column, row
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ConnectFourGUI(rows=6, columns=7)
     window.show()
     sys.exit(app.exec_())
+
 
 
 
