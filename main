@@ -3,40 +3,42 @@ Connect 4
 Alberto Elizondo & Nicholas Muchitti
 """
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QGridLayout, QPushButton, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QHBoxLayout, QVBoxLayout
 
 class ConnectFourGUI(QMainWindow):
     def __init__(self, rows, columns):
         super().__init__()
-
+        self.player = 0
         self.rows = rows
         self.columns = columns
-        self.board = [[0] * self.columns for _ in range(self.rows)]
+        self.board = [[-1] * self.columns for _ in range(self.rows)]
 
         self.init_ui()
 
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout()
         layout = QGridLayout()
-
+        
+        self.current_player_label = QLabel("Current Player: Red", self)
+        layout_ = QGridLayout(self)
+        layout_.addWidget(self.current_player_label)
         self.buttons = []
-        for row in range(self.rows + 1):
+        
+        
+                
+        for row in range(self.rows):
             for col in range(self.columns):
-                if row == 0:
-                    button = QPushButton()
-                    button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
-                    self.buttons.append(button)
-                    layout.addWidget(button, row, col)
-                    self.style_top_row(button)
-                else:
-                    button = QPushButton()
-                    button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
-                    self.buttons.append(button)
-                    layout.addWidget(button, row, col)
-                    self.style_button(button)
-
-        central_widget.setLayout(layout)
+                button = QPushButton()
+                button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
+                self.buttons.append(button)
+                layout.addWidget(button, row, col)
+                self.style_button(button)
+                
+        main_layout.addLayout(layout_)
+        main_layout.addLayout(layout)
+        central_widget.setLayout(main_layout)
     def style_top_row(self, button):
         button.setFixedSize(50, 50)  # Set a fixed size for the button
         button.setStyleSheet("""
@@ -67,20 +69,69 @@ class ConnectFourGUI(QMainWindow):
         # Add logic to handle button click
         # such as update the board and redraw the GUI
         print(f"Button in row {row + 1}, column {col + 1} clicked")
-        check_winner()
+        self.drop_piece(self.player, col)
+        if self.check_winner():
+            self.display_winner(self.player)
+        else:
+            self.player = (self.player + 1) % 2
         
     
-    def check_winner():
-        #check board
+    def check_winner(self):
+        for i in range(self.rows):
+            for j in range(self.columns):
+                # Check vertical
+                if i + 3 < self.rows and self.board[i][j] == self.board[i + 1][j] == self.board[i + 2][j] == self.board[i + 3][j] != -1:
+                    print(f"Player {self.board[i][j]} wins vertically!")
+
+                # Check horizontal
+                if j + 3 < self.columns and self.board[i][j] == self.board[i][j + 1] == self.board[i][j + 2] == self.board[i][j + 3] != -1:
+                    print(f"Player {self.board[i][j]} wins horizontally!")
+
+                # Check diagonal
+                if i + 3 < self.rows and j + 3 < self.columns and self.board[i][j] == self.board[i + 1][j + 1] == self.board[i + 2][j + 2] == self.board[i + 3][j + 3] != -1:
+                    print(f"Player {self.board[i][j]} wins diagonally!")
+
+        
     
-    def drop_piece(board, player, coulm, row):
-        #board, player, column, row
+    def drop_piece(self, player, column):
+        for row in range(self.rows -1, -1, -1):
+            if self.board[row][column] == -1:
+                self.board[row][column] = player
+                self.update_button_visuals(row, column)
+                break
+
+    def update_button_visuals(self, row, col):
+        player_color = "red" if self.player == 0 else "yellow"
+        self.buttons[row * self.columns + col].setStyleSheet(f"""
+            QPushButton {{
+                background-color: {player_color};
+                border: 2px solid black;
+                border-radius: 25px; /* Half of the button size for a circular shape */
+            }}
+        """)
+    
+    def display_winner(self, player):
+        # Disable all buttons
+        for button in self.buttons:
+            button.setEnabled(False)
+
+        # Display a message indicating the winner
+        print(f"Player {player} wins!")
+    
+    def reset_game(self):
+        # Clear the board and enable all buttons
+        self.board = [[0] * self.columns for _ in range(self.rows)]
+        for button in self.buttons:
+            button.setEnabled(True)
+        
+        
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ConnectFourGUI(rows=6, columns=7)
     window.show()
     sys.exit(app.exec_())
+    
 
 
 
