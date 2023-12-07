@@ -90,10 +90,13 @@ class ConnectFourGUI(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout()
-
-        self.current_player_label = QLabel("Current Player: Red", self)
+        self.winning_title = QLabel(f"", self)
+        self.winning_title.setAlignment(Qt.AlignCenter)
+        self.current_player_label = QLabel("Current player: Red", self)
         main_layout.addWidget(self.current_player_label)
-
+        
+        winning_layout = QHBoxLayout()
+        winning_layout.addWidget(self.winning_title)
         layout = QGridLayout()
 
         self.buttons = []
@@ -107,7 +110,7 @@ class ConnectFourGUI(QMainWindow):
                 self.style_button(button)
                 #button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-
+        main_layout.addLayout(winning_layout)
         main_layout.addLayout(layout)
         central_widget.setLayout(main_layout)
     
@@ -133,15 +136,20 @@ class ConnectFourGUI(QMainWindow):
             self.drop_piece(self.player, col)
             if self.check_winner():
                 self.display_winner(self.player)
+                if self.player == 0:
+                    self.winning_title.setText('Red wins!')
+                else:
+                    self.winning_title.setText('Yellow wins!')
                 QTimer.singleShot(1000, self.reset_game)
+                
                 #self.reset_game()
             else:
                 #if you are checking wins, change 1 to 0. For functioning game, change to self.player + 1
                 self.player = (self.player + 1) % 2
                 if self.player == 1:
-                    self.current_player_label = QLabel("Current Player: Red", self)
+                    self.current_player_label.setText("Current player: Yellow")
                 else:
-                    self.current_player_label = QLabel("Current Player: Yellow", self)
+                    self.current_player_label.setText("Current player: Red")
         
     
     def check_winner(self):
@@ -206,5 +214,3 @@ if __name__ == "__main__":
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
-
-
