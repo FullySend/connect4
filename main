@@ -1,14 +1,19 @@
 import sys
-from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog
 from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QColor
+
+class ColorDialog(QColorDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Choose Your Colors")
 
 class MenuPage(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.init_ui()
-
+        
     def init_ui(self):
         central_widget = QWidget()
         central_widget.setStyleSheet("background-color: lightgrey;")
@@ -34,22 +39,41 @@ class MenuPage(QMainWindow):
         button_layout = QVBoxLayout()
 
         start_game_button = QPushButton("Start Game", self)
-        start_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px; min-height: 2em")
+        #start_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px; min-height: 2em")
+        start_game_button.setStyleSheet(
+            "QPushButton {background-color: blue; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black}"
+            "QPushButton:hover {background-color: darkblue;}"
+            "QPushButton:pressed {background-color: blue;}"
+        )
         start_game_button.clicked.connect(self.start_game)
         button_layout.addWidget(start_game_button)
 
         restart_game_button = QPushButton("Restart Game", self)
-        restart_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        #restart_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        restart_game_button.setStyleSheet(
+            "QPushButton {background-color: #f44336; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black}"
+            "QPushButton:hover {background-color: #d32f2f;}"
+            "QPushButton:pressed {background-color: #b71c1c;}"
+        
+        )
         restart_game_button.clicked.connect(self.reset_game)
         button_layout.addWidget(restart_game_button)
 
         reset_score_button = QPushButton("Reset Score", self)
-        reset_score_button.setStyleSheet("color: white; background-color: grey; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        reset_score_button.setStyleSheet(
+            "QPushButton {background-color: grey; color: white; border-width: 2px; border-radius: 10px; padding: 10px;}"
+            "QPushButton:hover {background-color: darkgrey;}"
+            "QPushButton:pressed {background-color: grey;}"
+        )
         reset_score_button.clicked.connect(self.reset_score)
         button_layout.addWidget(reset_score_button)
         
         settings_buttons = QPushButton("Settings", self)
-        settings_buttons.setStyleSheet("color: white; background-color: grey; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        settings_buttons.setStyleSheet(
+            "QPushButton {background-color: grey; color: white; border-radius: 10px; padding: 10px;}"
+            "QPushButton:hover {background-color: darkgrey;}"
+            "QPushButton:pressed {background-color: grey;}"
+        )
         settings_buttons.clicked.connect(self.settings)
         button_layout.addWidget(settings_buttons)
 
@@ -69,11 +93,15 @@ class MenuPage(QMainWindow):
         self.hide()
         
     def reset_game(self):
-        pass
+        self.start_game()
+    
     def reset_score(self):
         pass
     def settings(self):
-        pass
+        color_dialog = ColorDialog(self)
+        if color_dialog.exec_() == ColorDialog.Accepted:
+            selected_color = color_dialog.selectedColor().name()
+            print(f"Selected Color: {selected_color}")
 
 class ConnectFourGUI(QMainWindow):
     def __init__(self, rows, columns, menu_page):
