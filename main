@@ -3,10 +3,13 @@ from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindo
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap, QColor
 
+
+player1_color = "#00FF00"
+player2_color = "#FF00FF"
 class ColorDialog(QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Choose Your Colors")
+        self.setWindowTitle("Player 1 Choose Your Color")
 
 class MenuPage(QMainWindow):
     def __init__(self):
@@ -98,10 +101,17 @@ class MenuPage(QMainWindow):
     def reset_score(self):
         pass
     def settings(self):
+        global player1_color, player2_color
         color_dialog = ColorDialog(self)
         if color_dialog.exec_() == ColorDialog.Accepted:
-            selected_color = color_dialog.selectedColor().name()
-            print(f"Selected Color: {selected_color}")
+            player1_color = color_dialog.selectedColor().name()
+            
+        color_dialog = ColorDialog(self)
+        if color_dialog.exec_() == ColorDialog.Accepted:
+            player2_color = color_dialog.selectedColor().name()
+            
+            
+            
 
 class ConnectFourGUI(QMainWindow):
     def __init__(self, rows, columns, menu_page):
@@ -151,7 +161,7 @@ class ConnectFourGUI(QMainWindow):
                 border-radius: 25px; /* Half of the button size for a circular shape */
             }
             QPushButton:hover {
-                background-color: green;
+                background-color: grey;
             }
         """)
     # ... (rest of your ConnectFourGUI class)
@@ -165,9 +175,9 @@ class ConnectFourGUI(QMainWindow):
             if self.check_winner():
                 self.display_winner(self.player)
                 if self.player == 0:
-                    self.winning_title.setText('Red wins!')
+                    self.winning_title.setText('Player 1 wins!')
                 else:
-                    self.winning_title.setText('Yellow wins!')
+                    self.winning_title.setText('Player 2 wins!')
                 QTimer.singleShot(1000, self.reset_game)
                 
                 #self.reset_game()
@@ -175,9 +185,9 @@ class ConnectFourGUI(QMainWindow):
                 #if you are checking wins, change 1 to 0. For functioning game, change to self.player + 1
                 self.player = (self.player + 1) % 2
                 if self.player == 1:
-                    self.current_player_label.setText("Current player: Yellow")
+                    self.current_player_label.setText("Current: Player 2")
                 else:
-                    self.current_player_label.setText("Current player: Red")
+                    self.current_player_label.setText("Current: Player 1")
         
     
     def check_winner(self):
@@ -209,7 +219,8 @@ class ConnectFourGUI(QMainWindow):
                 break
 
     def update_button_visuals(self, row, col):
-        player_color = "red" if self.player == 0 else "yellow"
+        global player1_color, player2_color
+        player_color = player1_color if self.player == 0 else player2_color
         self.buttons[row * self.columns + col].setStyleSheet(f"""
             QPushButton {{
                 background-color: {player_color};
@@ -242,3 +253,4 @@ if __name__ == "__main__":
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
+
