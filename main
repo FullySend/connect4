@@ -4,8 +4,8 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap, QColor
 
 
-player1_color = "#00FF00"
-player2_color = "#FF00FF"
+player1_color = "#FF0000"
+player2_color = "#FFFF00"
 class ColorDialog(QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
