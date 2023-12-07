@@ -1,6 +1,7 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout
-from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtGui import QPixmap
 
 class MenuPage(QMainWindow):
     def __init__(self):
@@ -10,19 +11,69 @@ class MenuPage(QMainWindow):
 
     def init_ui(self):
         central_widget = QWidget()
+        central_widget.setStyleSheet("background-color: lightgrey;")
         self.setCentralWidget(central_widget)
+        
+        
+        # Use a QVBoxLayout for the main layout
         main_layout = QVBoxLayout()
+        
+        connect_four_label = QLabel('<font size="30" color="black"><b>Connect</b></font><font size ="30" color="red"><b>Four</b></font>', self)
+        connect_four_label.setAlignment(Qt.AlignCenter)  # Center the label
+        main_layout.addWidget(connect_four_label)
+        # Create a horizontal layout for the image and buttons
+        image_button_layout = QHBoxLayout()
+    
+        board_img = QLabel(self)
+        image = QPixmap("images/board.png")
+        board_img.setPixmap(image)
+        board_img.setAlignment(Qt.AlignCenter)  # Center the image
+        image_button_layout.addWidget(board_img)
+
+        # Create a vertical layout for buttons
+        button_layout = QVBoxLayout()
 
         start_game_button = QPushButton("Start Game", self)
+        start_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px; min-height: 2em")
         start_game_button.clicked.connect(self.start_game)
-        main_layout.addWidget(start_game_button)
+        button_layout.addWidget(start_game_button)
+
+        restart_game_button = QPushButton("Restart Game", self)
+        restart_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        restart_game_button.clicked.connect(self.reset_game)
+        button_layout.addWidget(restart_game_button)
+
+        reset_score_button = QPushButton("Reset Score", self)
+        reset_score_button.setStyleSheet("color: white; background-color: grey; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        reset_score_button.clicked.connect(self.reset_score)
+        button_layout.addWidget(reset_score_button)
+        
+        settings_buttons = QPushButton("Settings", self)
+        settings_buttons.setStyleSheet("color: white; background-color: grey; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
+        settings_buttons.clicked.connect(self.settings)
+        button_layout.addWidget(settings_buttons)
+
+        # Add the button layout to the image and button layout
+        image_button_layout.addLayout(button_layout)
+
+        # Add the image and button layout to the main layout
+        main_layout.addLayout(image_button_layout)
+
 
         central_widget.setLayout(main_layout)
+        self.resize(600, 400)
 
     def start_game(self):
         self.connect_four_game = ConnectFourGUI(rows=6, columns=7, menu_page=self)
         self.connect_four_game.show()
         self.hide()
+        
+    def reset_game(self):
+        pass
+    def reset_score(self):
+        pass
+    def settings(self):
+        pass
 
 class ConnectFourGUI(QMainWindow):
     def __init__(self, rows, columns, menu_page):
@@ -49,10 +100,13 @@ class ConnectFourGUI(QMainWindow):
         for row in range(self.rows):
             for col in range(self.columns):
                 button = QPushButton()
+
                 button.clicked.connect(lambda row=row, col=col: self.handle_button_click(row, col))
                 self.buttons.append(button)
                 layout.addWidget(button, row, col)
                 self.style_button(button)
+                #button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
 
         main_layout.addLayout(layout)
         central_widget.setLayout(main_layout)
@@ -152,4 +206,5 @@ if __name__ == "__main__":
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
+
 
