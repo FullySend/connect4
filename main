@@ -1,16 +1,46 @@
 import sys
-from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog
+from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap, QColor
 
 
 player1_color = "#FF0000"
 player2_color = "#FFFF00"
+
 class ColorDialog(QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Player 1 Choose Your Color")
+        self.setWindowTitle("Choose your color")
 
+
+class ColorSelectWidget(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        layout = QVBoxLayout()
+
+        player1_color_button = QPushButton("Select Player 1 Color", self)
+        player1_color_button.clicked.connect(self.select_player1_color)
+        layout.addWidget(player1_color_button)
+
+        player2_color_button = QPushButton("Select Player 2 Color", self)
+        player2_color_button.clicked.connect(self.select_player2_color)
+        layout.addWidget(player2_color_button)
+
+        self.setLayout(layout)
+
+    def select_player1_color(self):
+        global player1_color
+        color_dialog = ColorDialog(self)
+        if color_dialog.exec_() == ColorDialog.Accepted:
+            player1_color = color_dialog.selectedColor().name()
+
+    def select_player2_color(self):
+        global player2_color
+        color_dialog = ColorDialog(self)
+        if color_dialog.exec_() == ColorDialog.Accepted:
+            player2_color = color_dialog.selectedColor().name()
+            
 class MenuPage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -101,15 +131,8 @@ class MenuPage(QMainWindow):
     def reset_score(self):
         pass
     def settings(self):
-        global player1_color, player2_color
-        color_dialog = ColorDialog(self)
-        if color_dialog.exec_() == ColorDialog.Accepted:
-            player1_color = color_dialog.selectedColor().name()
-            
-        color_dialog = ColorDialog(self)
-        if color_dialog.exec_() == ColorDialog.Accepted:
-            player2_color = color_dialog.selectedColor().name()
-            
+        color_select_widget = ColorSelectWidget(self)
+        color_select_widget.show()
             
             
 
@@ -127,15 +150,29 @@ class ConnectFourGUI(QMainWindow):
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        central_widget.setStyleSheet("background-color: blue;")
+        
         main_layout = QVBoxLayout()
         self.winning_title = QLabel(f"", self)
         self.winning_title.setAlignment(Qt.AlignCenter)
-        self.current_player_label = QLabel("Current player: Red", self)
+        self.current_player_label = QLabel("Current: Player 1", self)
         main_layout.addWidget(self.current_player_label)
         
         winning_layout = QHBoxLayout()
         winning_layout.addWidget(self.winning_title)
         layout = QGridLayout()
+        
+        home_menu_button = QPushButton("𓉞", self)
+        home_menu_button.setStyleSheet(
+            "QPushButton {background-color: grey; color: white; border-width: 2px; border-radius: 5px; padding: 5px; width: 30px;}"
+            "QPushButton:hover {background-color: darkgrey;}"
+            "QPushButton:pressed {background-color: grey;}"
+        )
+        home_menu_button.setFixedSize(30, 34)
+        home_menu_button.clicked.connect(self.main_menu)
+        winning_layout.addWidget(home_menu_button)
+        
+        
 
         self.buttons = []
         for row in range(self.rows):
@@ -152,8 +189,14 @@ class ConnectFourGUI(QMainWindow):
         main_layout.addLayout(layout)
         central_widget.setLayout(main_layout)
     
+    def main_menu(self):
+        self.hide()
+        self.menu_page.show()
+    
     def style_button(self, button):
+        global player1_color, player2_color
         button.setFixedSize(50, 50)  # Set a fixed size for the button
+        player_color = player1_color if self.player == 0 else player2_color
         button.setStyleSheet("""
             QPushButton {
                 background-color: white;
@@ -161,7 +204,7 @@ class ConnectFourGUI(QMainWindow):
                 border-radius: 25px; /* Half of the button size for a circular shape */
             }
             QPushButton:hover {
-                background-color: grey;
+                background-color: lightgrey;
             }
         """)
     # ... (rest of your ConnectFourGUI class)
@@ -191,26 +234,34 @@ class ConnectFourGUI(QMainWindow):
         
     
     def check_winner(self):
+
         for i in range(self.rows):
             for j in range(self.columns):
                 # Check vertical
                 if i + 3 < self.rows and self.board[i][j] == self.board[i + 1][j] == self.board[i + 2][j] == self.board[i + 3][j] != -1:
                     print(f"Player {self.board[i][j]} wins vertically!")
+                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins vertically!", QMessageBox.Ok) #Message boxes not displaying correct player
                     return True
 
                 # Check horizontal
                 if j + 3 < self.columns and self.board[i][j] == self.board[i][j + 1] == self.board[i][j + 2] == self.board[i][j + 3] != -1:
                     print(f"Player {self.board[i][j]} wins horizontally!")
+                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins horizontally!", QMessageBox.Ok)
                     return True
 
                 # Check diagonal
                 if i + 3 < self.rows and j + 3 < self.columns and self.board[i][j] == self.board[i + 1][j + 1] == self.board[i + 2][j + 2] == self.board[i + 3][j + 3] != -1:
-                    print(f"Player {self.board[i][j]} wins diagonally!")
+                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins horizontally!", QMessageBox.Ok)
                     return True
                 
            
         
-    
+    def show_winner(self):
+        QMessageBox.information(self, "Winner!", f"The winner is {self.board[i][j]}!", QMessageBox.Ok)
+        
+        # Start a new game
+        self.new_game()
+        
     def drop_piece(self, player, column):
         for row in range(self.rows -1, -1, -1):
             if self.board[row][column] == -1:
@@ -245,7 +296,7 @@ class ConnectFourGUI(QMainWindow):
         for button in self.buttons:
             button.setEnabled(True)
             self.style_button(button)
-        
+        self.winning_title.setText("")
         #self.player = 0
         
 if __name__ == "__main__":
