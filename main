@@ -2,7 +2,7 @@ import sys
 from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap, QColor
-
+#add timer, get rid of restart game and change start game to Play reset score should be red button and add scalability buttons to settings
 
 player1_color = "#FF0000"
 player2_color = "#FFFF00"
@@ -121,11 +121,23 @@ class MenuPage(QMainWindow):
         self.resize(600, 400)
 
     def start_game(self):
+        # Check if there is a saved state
+        if hasattr(self, 'connect_four_game_state'):
+            saved_state = self.connect_four_game_state
+            delattr(self, 'connect_four_game_state')  # Clear the saved state
+        else:
+            saved_state = None
+
         self.connect_four_game = ConnectFourGUI(rows=6, columns=7, menu_page=self)
+        if saved_state:
+            self.connect_four_game.load_game(saved_state)
         self.connect_four_game.show()
         self.hide()
-        
+
     def reset_game(self):
+        # Save the current game state before resetting
+        if hasattr(self, 'connect_four_game'):
+            self.connect_four_game_state = self.connect_four_game.save_game()
         self.start_game()
     
     def reset_score(self):
@@ -137,11 +149,16 @@ class MenuPage(QMainWindow):
             
 
 class ConnectFourGUI(QMainWindow):
+    #player1 = 0
+    #player2 = 0
     def __init__(self, rows, columns, menu_page):
         super().__init__()
         self.menu_page = menu_page
+        self.player1 = 0
+        self.player2 = 0
         self.player = 0
         self.rows = rows
+        self.winning_positions = []
         self.columns = columns
         self.board = [[-1] * self.columns for _ in range(self.rows)]
 
@@ -151,12 +168,18 @@ class ConnectFourGUI(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_widget.setStyleSheet("background-color: blue;")
-        
+        self.player1_score = QLabel("Player 1 score: 0")
+        self.player1_score.setStyleSheet("QLabel {color: lightgrey}")
+        self.player2_score = QLabel("Player 2 score: 0")
+        self.player2_score.setStyleSheet("QLabel {color: lightgrey}")
         main_layout = QVBoxLayout()
         self.winning_title = QLabel(f"", self)
         self.winning_title.setAlignment(Qt.AlignCenter)
         self.current_player_label = QLabel("Current: Player 1", self)
+        self.current_player_label.setStyleSheet("QLabel {color: lightgrey}")
         main_layout.addWidget(self.current_player_label)
+        main_layout.addWidget(self.player1_score)
+        main_layout.addWidget(self.player2_score)
         
         winning_layout = QHBoxLayout()
         winning_layout.addWidget(self.winning_title)
@@ -190,9 +213,10 @@ class ConnectFourGUI(QMainWindow):
         central_widget.setLayout(main_layout)
     
     def main_menu(self):
+        self.save_game()
         self.hide()
         self.menu_page.show()
-    
+        
     def style_button(self, button):
         global player1_color, player2_color
         button.setFixedSize(50, 50)  # Set a fixed size for the button
@@ -207,53 +231,72 @@ class ConnectFourGUI(QMainWindow):
                 background-color: lightgrey;
             }
         """)
+    def check_legal_move(self, column):
+        return 0 <= column < self.columns and self.board[0][column] == -1
     # ... (rest of your ConnectFourGUI class)
     def handle_button_click(self, row, col):
         # Add logic to handle button click
         # such as update the board and redraw the GUI
-        
         if not self.check_winner():
             print(f"Button in row {row + 1}, column {col + 1} clicked")
-            self.drop_piece(self.player, col)
-            if self.check_winner():
-                self.display_winner(self.player)
-                if self.player == 0:
-                    self.winning_title.setText('Player 1 wins!')
-                else:
-                    self.winning_title.setText('Player 2 wins!')
-                QTimer.singleShot(1000, self.reset_game)
-                
+            if self.check_legal_move(col):
+                self.drop_piece(self.player, col)
+                if self.check_winner():
+                    self.display_winner(self.player)
+                    if self.player == 0:
+                        self.winning_title.setText('Player 1 wins!')
+                    else:
+                        self.winning_title.setText('Player 2 wins!')
+                    QTimer.singleShot(1000, self.reset_game)
+                    
                 #self.reset_game()
-            else:
-                #if you are checking wins, change 1 to 0. For functioning game, change to self.player + 1
-                self.player = (self.player + 1) % 2
-                if self.player == 1:
-                    self.current_player_label.setText("Current: Player 2")
                 else:
-                    self.current_player_label.setText("Current: Player 1")
-        
-    
+                    #if you are checking wins, change 1 to 0. For functioning game, change to self.player + 1
+                    self.player = (self.player + 1) % 2
+                    if self.player == 1:
+                        self.current_player_label.setText("Current: Player 2")
+                    else:
+                        self.current_player_label.setText("Current: Player 1")
+            else:
+                QMessageBox.information(self, "", f"Player {self.player+1} made an illegal move. Try again", QMessageBox.Ok)
+        if self.is_board_full():
+            QMessageBox.information(self, "", f"Players tied", QMessageBox.Ok)
+            self.reset_game()
+
     def check_winner(self):
 
         for i in range(self.rows):
             for j in range(self.columns):
                 # Check vertical
                 if i + 3 < self.rows and self.board[i][j] == self.board[i + 1][j] == self.board[i + 2][j] == self.board[i + 3][j] != -1:
+                    self.winning_positions = [(i, j), (i + 1, j), (i + 2, j), (i + 3, j)]
                     print(f"Player {self.board[i][j]} wins vertically!")
-                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins vertically!", QMessageBox.Ok) #Message boxes not displaying correct player
+                    self.update_button_visuals(i, j)
+                    QMessageBox.information(self, "Winner!", f"Player {self.player+1} wins vertically!", QMessageBox.Ok) #Message boxes not displaying correct player
+                    
+                    if self.player == 1:
+                        pass
                     return True
 
                 # Check horizontal
                 if j + 3 < self.columns and self.board[i][j] == self.board[i][j + 1] == self.board[i][j + 2] == self.board[i][j + 3] != -1:
+                    self.winning_positions = [(i, j), (i, j + 1), (i, j + 2), (i, j + 3)]
                     print(f"Player {self.board[i][j]} wins horizontally!")
-                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins horizontally!", QMessageBox.Ok)
+                    self.update_button_visuals(i, j)
+                    QMessageBox.information(self, "Winner!", f"Player {self.player+1} wins horizontally!", QMessageBox.Ok)
                     return True
 
                 # Check diagonal
                 if i + 3 < self.rows and j + 3 < self.columns and self.board[i][j] == self.board[i + 1][j + 1] == self.board[i + 2][j + 2] == self.board[i + 3][j + 3] != -1:
-                    QMessageBox.information(self, "Winner!", f"Player {self.player} wins horizontally!", QMessageBox.Ok)
+                    self.winning_positions = [(i, j), (i + 1, j + 1), (i + 2, j + 2), (i + 3, j + 3)]
+                    self.update_button_visuals(i, j)
+                    QMessageBox.information(self, "Winner!", f"Player {self.player+1} wins horizontally!", QMessageBox.Ok)
                     return True
-                
+                if i - 3 >= 0 and j + 3 < self.columns and self.board[i][j] == self.board[i - 1][j + 1] == self.board[i - 2][j + 2] == self.board[i - 3][j + 3] != -1:
+                    self.winning_positions = [(i, j), (i - 1, j + 1), (i - 2, j + 2), (i - 3, j + 3)]
+                    self.update_button_visuals(i, j)
+                    QMessageBox.information(self, "Winner!", f"Player {self.player+1} wins diagonally!", QMessageBox.Ok)
+                    return True
            
         
     def show_winner(self):
@@ -272,6 +315,7 @@ class ConnectFourGUI(QMainWindow):
     def update_button_visuals(self, row, col):
         global player1_color, player2_color
         player_color = player1_color if self.player == 0 else player2_color
+        button = self.buttons[row * self.columns + col]
         self.buttons[row * self.columns + col].setStyleSheet(f"""
             QPushButton {{
                 background-color: {player_color};
@@ -279,11 +323,41 @@ class ConnectFourGUI(QMainWindow):
                 border-radius: 25px; /* Half of the button size for a circular shape */
             }}
         """)
-    
+        
+        if (row, col) in self.winning_positions:
+             print("hi")
+             for index in self.winning_positions:
+                 row, col = index[0], index[1]
+                 self.buttons[row * self.columns + col].setStyleSheet(f"""
+                 QPushButton {{
+                     background-color: {player_color};
+                     border: 2px solid orange;
+                     border-radius: 25px; /* Half of the button size for a circular shape */
+                 }}
+            """)
+        self.winning_positions = []
+        
+    def is_board_full(self):
+        for row in self.board:
+            if -1 in row:
+                return False
+        return True
+
+    def player_counter(self):
+        pass
+       
     def display_winner(self, player):
         # Disable all buttons
-        for button in self.buttons:
-            button.setEnabled(False)
+        if player == 0:
+            self.player1 += 1
+        else:
+            self.player2 += 1
+        
+        
+        self.player1_score.setText(f"Player 1 score: {self.player1}")
+        self.player2_score.setText(f"Player 2 score: {self.player2}")
+        #for button in self.buttons:
+            #button.setEnabled(False)
 
         # Display a message indicating the winner
         print(f"Player {player} wins!")
@@ -297,11 +371,46 @@ class ConnectFourGUI(QMainWindow):
             button.setEnabled(True)
             self.style_button(button)
         self.winning_title.setText("")
+        print("Reset")
         #self.player = 0
+        
+    def update_game_state(self, saved_state):
+        """
+        Update the game state based on the loaded state.
+        """
+        self.player1, self.player2, self.player, self.rows, self.columns, self.board = saved_state
+
+        # Update the visual representation of the board
+        for row in range(self.rows):
+            for col in range(self.columns):
+                self.update_button_visuals(row, col)
+
+        # Update other UI elements if needed
+        if self.player == 0:
+            self.current_player_label.setText("Current: Player 1")
+        else:
+            self.current_player_label.setText("Current: Player 2")
+        self.player1_score.setText(f"Player 1 score: {self.player1}")
+        self.player2_score.setText(f"Player 2 score: {self.player2}")
+        self.winning_title.setText("")  # Clear any winning title
+
+    def load_game(self, saved_state):
+        """
+        Load the game state from a saved state.
+        """
+        self.update_game_state(saved_state)
+        print(self.board)
+
+
+    def save_game(self):
+        """
+        Save the current game state.
+        """
+        print(f"Saving {self.board}")
+        return [self.player1, self.player2, self.player, self.rows, self.columns, self.board]
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
-
