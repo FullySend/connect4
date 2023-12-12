@@ -1,8 +1,8 @@
 import sys
-from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog
+from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog, QComboBox
 from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QPixmap, QColor
-#add timer, get rid of restart game and change start game to Play reset score should be red button and add scalability buttons to settings
+from PySide6.QtGui import QPixmap, QColor, QFont
+#add timer, reset score should be red button
 
 player1_color = "#FF0000"
 player2_color = "#FFFF00"
@@ -26,8 +26,28 @@ class ColorSelectWidget(QDialog):
         player2_color_button = QPushButton("Select Player 2 Color", self)
         player2_color_button.clicked.connect(self.select_player2_color)
         layout.addWidget(player2_color_button)
+        
+        board_size_label = QLabel("Select Board Size:")
+        layout.addWidget(board_size_label)
+
+        self.board_size_combo = QComboBox(self)
+        self.board_size_combo.addItem("6x7")  # Default
+        self.board_size_combo.addItem("8x9")
+        self.board_size_combo.addItem("10x12")
+        layout.addWidget(self.board_size_combo)
+        
+        confirm_button = QPushButton("Confirm Selection", self)
+        confirm_button.clicked.connect(self.confirm_selection)
+        layout.addWidget(confirm_button)
+
 
         self.setLayout(layout)
+
+        # Initialize selected size
+        self.selected_size = self.get_selected_size()
+
+        # Connect combo box signal to update selected size
+        self.board_size_combo.currentIndexChanged.connect(self.update_selected_size)
 
     def select_player1_color(self):
         global player1_color
@@ -40,7 +60,19 @@ class ColorSelectWidget(QDialog):
         color_dialog = ColorDialog(self)
         if color_dialog.exec_() == ColorDialog.Accepted:
             player2_color = color_dialog.selectedColor().name()
-            
+    
+    def get_selected_size(self):
+        return tuple(map(int, self.board_size_combo.currentText().split('x')))
+
+    def update_selected_size(self):
+        self.selected_size = self.get_selected_size()
+    
+    def confirm_selection(self):
+        # Add any actions you want to perform after confirmation
+        print("Confirmed Selection")
+        print("Selected Size:", self.selected_size)
+        self.accept()
+        
 class MenuPage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -51,7 +83,7 @@ class MenuPage(QMainWindow):
         central_widget = QWidget()
         central_widget.setStyleSheet("background-color: lightgrey;")
         self.setCentralWidget(central_widget)
-        
+        self.color_select_widget = ColorSelectWidget(self)
         
         # Use a QVBoxLayout for the main layout
         main_layout = QVBoxLayout()
@@ -66,49 +98,58 @@ class MenuPage(QMainWindow):
         image = QPixmap("images/board.png")
         board_img.setPixmap(image)
         board_img.setAlignment(Qt.AlignCenter)  # Center the image
-        image_button_layout.addWidget(board_img)
+        image_button_layout.addWidget(board_img, alignment=Qt.AlignRight)
 
         # Create a vertical layout for buttons
         button_layout = QVBoxLayout()
-
-        start_game_button = QPushButton("Start Game", self)
+        
+        #font = QFont("Press Start 2P", 24, QFont.Bold)
+        start_game_button = QPushButton("Play", self)
+        start_game_button.setFixedSize(200, 60)
+        start_game_button.setFont(QFont("Press Start 2P", 24, QFont.Bold))
         #start_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px; min-height: 2em")
         start_game_button.setStyleSheet(
-            "QPushButton {background-color: blue; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black}"
+            "QPushButton {background-color: blue; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black; border: 1px solid black;}"
             "QPushButton:hover {background-color: darkblue;}"
             "QPushButton:pressed {background-color: blue;}"
         )
         start_game_button.clicked.connect(self.start_game)
-        button_layout.addWidget(start_game_button)
+        button_layout.addWidget(start_game_button, alignment=Qt.AlignRight)
 
-        restart_game_button = QPushButton("Restart Game", self)
+        #restart_game_button = QPushButton("Restart Game", self)
         #restart_game_button.setStyleSheet("color: white; background-color: blue; border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; font: bold 14px; min-width: 3em; padding: 6px;min-height: 2em")
-        restart_game_button.setStyleSheet(
-            "QPushButton {background-color: #f44336; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black}"
+        #restart_game_button.setStyleSheet(
+        #    "QPushButton {background-color: #f44336; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black}"
+        #    "QPushButton:hover {background-color: #d32f2f;}"
+        #    "QPushButton:pressed {background-color: #b71c1c;}"
+        #
+        #)
+        #restart_game_button.clicked.connect(self.reset_game)
+        #button_layout.addWidget(restart_game_button)
+
+        reset_score_button = QPushButton("Reset", self)
+        reset_score_button.setStyleSheet(
+            "QPushButton {background-color: #f44336; color: white; border-radius: 10px; padding: 10px; border-width: 2px; border-color: black; border: 1px solid black;}"
             "QPushButton:hover {background-color: #d32f2f;}"
             "QPushButton:pressed {background-color: #b71c1c;}"
         
         )
-        restart_game_button.clicked.connect(self.reset_game)
-        button_layout.addWidget(restart_game_button)
-
-        reset_score_button = QPushButton("Reset Score", self)
-        reset_score_button.setStyleSheet(
-            "QPushButton {background-color: grey; color: white; border-width: 2px; border-radius: 10px; padding: 10px;}"
-            "QPushButton:hover {background-color: darkgrey;}"
-            "QPushButton:pressed {background-color: grey;}"
-        )
         reset_score_button.clicked.connect(self.reset_score)
-        button_layout.addWidget(reset_score_button)
+        reset_score_button.setFixedSize(200, 40)
+        reset_score_button.setFont(QFont("Press Start 2P", 18, QFont.Bold))
+        button_layout.addWidget(reset_score_button, alignment=Qt.AlignRight)
         
         settings_buttons = QPushButton("Settings", self)
+        settings_buttons.setFixedSize(100, 35)
+        settings_buttons.setFont(QFont("Press Start 2P", 12, QFont.Bold))
         settings_buttons.setStyleSheet(
-            "QPushButton {background-color: grey; color: white; border-radius: 10px; padding: 10px;}"
-            "QPushButton:hover {background-color: darkgrey;}"
-            "QPushButton:pressed {background-color: grey;}"
+            "QPushButton {background-color: darkgrey; color: white; border-radius: 10px; padding: 10px; border: 1px solid black;}"
+            "QPushButton:hover {background-color: grey;}"
+            "QPushButton:pressed {background-color: darkgrey;}"
         )
         settings_buttons.clicked.connect(self.settings)
-        button_layout.addWidget(settings_buttons)
+
+        button_layout.addWidget(settings_buttons, alignment=Qt.AlignRight)
 
         # Add the button layout to the image and button layout
         image_button_layout.addLayout(button_layout)
@@ -118,7 +159,7 @@ class MenuPage(QMainWindow):
 
 
         central_widget.setLayout(main_layout)
-        self.resize(600, 400)
+        self.resize(560, 400)
 
     def start_game(self):
         # Check if there is a saved state
@@ -128,23 +169,25 @@ class MenuPage(QMainWindow):
         else:
             saved_state = None
 
-        self.connect_four_game = ConnectFourGUI(rows=6, columns=7, menu_page=self)
+        selected_size = self.color_select_widget.selected_size  # Retrieve selected size
+        self.connect_four_game = ConnectFourGUI(rows=selected_size[0], columns=selected_size[1], menu_page=self)
+        
         if saved_state:
             self.connect_four_game.load_game(saved_state)
         self.connect_four_game.show()
         self.hide()
-
-    def reset_game(self):
-        # Save the current game state before resetting
-        if hasattr(self, 'connect_four_game'):
-            self.connect_four_game_state = self.connect_four_game.save_game()
-        self.start_game()
     
-    def reset_score(self):
-        pass
+    def reset_score(self): # not reseting scores
+        global player1_color, player2_color
+        player1_color = "#FF0000"
+        player2_color = "#FFFF00"
+        self.color_select_widget.board_size_combo.setCurrentIndex(0)
+        
+    
     def settings(self):
-        color_select_widget = ColorSelectWidget(self)
-        color_select_widget.show()
+        self.color_select_widget.show()
+
+    
             
             
 
@@ -167,7 +210,7 @@ class ConnectFourGUI(QMainWindow):
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        central_widget.setStyleSheet("background-color: blue;")
+        central_widget.setStyleSheet("background-color: darkblue;")
         self.player1_score = QLabel("Player 1 score: 0")
         self.player1_score.setStyleSheet("QLabel {color: lightgrey}")
         self.player2_score = QLabel("Player 2 score: 0")
@@ -185,13 +228,13 @@ class ConnectFourGUI(QMainWindow):
         winning_layout.addWidget(self.winning_title)
         layout = QGridLayout()
         
-        home_menu_button = QPushButton("𓉞", self)
+        home_menu_button = QPushButton("🚪", self)#𓉞
         home_menu_button.setStyleSheet(
-            "QPushButton {background-color: grey; color: white; border-width: 2px; border-radius: 5px; padding: 5px; width: 30px;}"
-            "QPushButton:hover {background-color: darkgrey;}"
-            "QPushButton:pressed {background-color: grey;}"
+            "QPushButton {background-color: darkgrey; color: white; border-width: 2px; border-radius: 5px; padding: 5px; width: 30px;}"
+            "QPushButton:hover {background-color: grey;}"
+            "QPushButton:pressed {background-color: darkgrey;}"
         )
-        home_menu_button.setFixedSize(30, 34)
+        home_menu_button.setFixedSize(27, 35)
         home_menu_button.clicked.connect(self.main_menu)
         winning_layout.addWidget(home_menu_button)
         
@@ -207,8 +250,10 @@ class ConnectFourGUI(QMainWindow):
                 layout.addWidget(button, row, col)
                 self.style_button(button)
                 #button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
+        
         main_layout.addLayout(winning_layout)
+
+
         main_layout.addLayout(layout)
         central_widget.setLayout(main_layout)
     
@@ -331,7 +376,7 @@ class ConnectFourGUI(QMainWindow):
                  self.buttons[row * self.columns + col].setStyleSheet(f"""
                  QPushButton {{
                      background-color: {player_color};
-                     border: 2px solid orange;
+                     border: 3px solid gold;
                      border-radius: 25px; /* Half of the button size for a circular shape */
                  }}
             """)
@@ -366,6 +411,7 @@ class ConnectFourGUI(QMainWindow):
     def reset_game(self):
         #self.menu_page.show()
         #self.hide()
+        self.rows, self.columns = self.get_selected_board_size()
         self.board = [[-1] * self.columns for _ in range(self.rows)]
         for button in self.buttons:
             button.setEnabled(True)
@@ -373,6 +419,12 @@ class ConnectFourGUI(QMainWindow):
         self.winning_title.setText("")
         print("Reset")
         #self.player = 0
+    
+    def get_selected_board_size(self):
+        selected_text = self.menu_page.color_select_widget.board_size_combo.currentText()
+        self.rows, self.columns = int(self.rows), int(self.columns)
+        rows, columns = map(int, selected_text.split('x'))
+        return rows, columns
         
     def update_game_state(self, saved_state):
         """
@@ -414,3 +466,4 @@ if __name__ == "__main__":
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
+
