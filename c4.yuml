@@ -1,0 +1,23 @@
+// {type:class}
+// {direction:topDown}
+// Relationships (A has_a B = [A]++-[B], A is_a = B = [B]^[A])
+[ConnectFourGUI |-player1:int; -player2:int; -player:int; -rows:int; -winning_positions:list; -columns:int; -board:list]++-[QMainWindow]
+[ConnectFourGUI|+__init__(rows, columns, menu_page); +init_ui(); +check_winner(); +show_winner(); +drop_piece(player, column); +update_button_visuals(row, col); +is_board_full(); +player_counter(); +display_winner(player); +reset_game(); +get_selected_board_size(); +update_game_state(saved_state); +load_game(saved_state); +save_game():list]
+[MenuPage |-connect_four_game_state:ConnectFourGUI |+__init__(); +init_ui(); +start_game(); +reset_score(); +settings();]
+[MenuPage]++-[QMainWindow]
+[MenuPage|+__init__(); +init_ui(); +start_game(); +reset_score(); +settings();]
+[MenuPage]++-[QWidget]
+[MenuPage]++-[ColorSelectWidget]
+
+[ConnectFourGUI]^[QMainWindow]
+[ConnectFourGUI|-connect_four_game_state:ConnectFourGUI |+__init__(rows, columns, menu_page); +init_ui(); +check_winner(); +show_winner(); +drop_piece(player, column); +update_button_visuals(row, col); +is_board_full(); +player_counter(); +display_winner(player); +reset_game(); +get_selected_board_size(); +update_game_state(saved_state); +load_game(saved_state); +save_game():list]
+[ConnectFourGUI]++-[QWidget]
+[ConnectFourGUI]++-[QMainWindow]
+
+[ColorDialog]^[ColorSelectWidget]
+[ColorSelectWidget]++-[QDialog]
+[ColorSelectWidget|+__init__(parent=None); +select_player1_color(); +select_player2_color(); +get_selected_size(); +update_selected_size(); +confirm_selection();]
+[ColorSelectWidget]++-[QWidget]
+
+[ColorDialog]++-[QColorDialog]
+
