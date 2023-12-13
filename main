@@ -3,7 +3,8 @@ from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindo
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap, QColor, QFont
 #add timer, reset score should be red button
-
+player1 = 0
+player2 = 0
 player1_color = "#FF0000"
 player2_color = "#FFFF00"
 
@@ -171,19 +172,24 @@ class MenuPage(QMainWindow):
 
         selected_size = self.color_select_widget.selected_size  # Retrieve selected size
         self.connect_four_game = ConnectFourGUI(rows=selected_size[0], columns=selected_size[1], menu_page=self)
-        
+        print(f'{self.connect_four_game.load_scores()}')
+        print(f'{self.connect_four_game.player1}{self.connect_four_game.player2}')
+        self.connect_four_game.player1, self.connect_four_game.player2 = self.connect_four_game.load_scores()
+        print(f'{self.connect_four_game.player1}{self.connect_four_game.player2}')
         if saved_state:
             self.connect_four_game.load_game(saved_state)
         self.connect_four_game.show()
         self.hide()
     
     def reset_score(self): # not reseting scores
-        global player1_color, player2_color
+        global player1_color, player2_color, player1, player2
         player1_color = "#FF0000"
         player2_color = "#FFFF00"
         self.color_select_widget.board_size_combo.setCurrentIndex(0)
+        player1 = 0
+        player2 = 0
         
-    
+        #self.save_scores(self.connect_four_game.player1, self.connect_four_game.player2)
     def settings(self):
         self.color_select_widget.show()
 
@@ -195,6 +201,7 @@ class ConnectFourGUI(QMainWindow):
     #player1 = 0
     #player2 = 0
     def __init__(self, rows, columns, menu_page):
+        global player1, player2
         super().__init__()
         self.menu_page = menu_page
         self.player1 = 0
@@ -208,12 +215,13 @@ class ConnectFourGUI(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        global player1, player2
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_widget.setStyleSheet("background-color: darkblue;")
-        self.player1_score = QLabel("Player 1 score: 0")
+        self.player1_score = QLabel(f"Player 1 score: {player1}")
         self.player1_score.setStyleSheet("QLabel {color: lightgrey}")
-        self.player2_score = QLabel("Player 2 score: 0")
+        self.player2_score = QLabel(f"Player 2 score: {player2}")
         self.player2_score.setStyleSheet("QLabel {color: lightgrey}")
         main_layout = QVBoxLayout()
         self.winning_title = QLabel(f"", self)
@@ -276,6 +284,11 @@ class ConnectFourGUI(QMainWindow):
                 background-color: lightgrey;
             }
         """)
+        
+        
+    def load_scores(self):
+        global player1, player2
+        return player1, player2
     def check_legal_move(self, column):
         return 0 <= column < self.columns and self.board[0][column] == -1
     # ... (rest of your ConnectFourGUI class)
@@ -392,15 +405,16 @@ class ConnectFourGUI(QMainWindow):
         pass
        
     def display_winner(self, player):
+        global player1, player2
         # Disable all buttons
         if player == 0:
-            self.player1 += 1
+            player1 += 1
         else:
-            self.player2 += 1
+            player2 += 1
         
         
-        self.player1_score.setText(f"Player 1 score: {self.player1}")
-        self.player2_score.setText(f"Player 2 score: {self.player2}")
+        self.player1_score.setText(f"Player 1 score: {player1}")
+        self.player2_score.setText(f"Player 2 score: {player2}")
         #for button in self.buttons:
             #button.setEnabled(False)
 
@@ -427,10 +441,11 @@ class ConnectFourGUI(QMainWindow):
         return rows, columns
         
     def update_game_state(self, saved_state):
+        global player1, player2
         """
         Update the game state based on the loaded state.
         """
-        self.player1, self.player2, self.player, self.rows, self.columns, self.board = saved_state
+        player1, player2, self.player, self.rows, self.columns, self.board = saved_state
 
         # Update the visual representation of the board
         for row in range(self.rows):
@@ -442,8 +457,8 @@ class ConnectFourGUI(QMainWindow):
             self.current_player_label.setText("Current: Player 1")
         else:
             self.current_player_label.setText("Current: Player 2")
-        self.player1_score.setText(f"Player 1 score: {self.player1}")
-        self.player2_score.setText(f"Player 2 score: {self.player2}")
+        self.player1_score.setText(f"Player 1 score: {player1}")
+        self.player2_score.setText(f"Player 2 score: {player2}")
         self.winning_title.setText("")  # Clear any winning title
 
     def load_game(self, saved_state):
@@ -455,15 +470,15 @@ class ConnectFourGUI(QMainWindow):
 
 
     def save_game(self):
+        global player1, player2
         """
         Save the current game state.
         """
         print(f"Saving {self.board}")
-        return [self.player1, self.player2, self.player, self.rows, self.columns, self.board]
+        return [player1, player2, self.player, self.rows, self.columns, self.board]
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
-
