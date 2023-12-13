@@ -15,6 +15,9 @@ Resources:
     https://doc.qt.io/qtforpython-6/
     https://doc.qt.io/
     https://en.wikipedia.org/wiki/Connect_Four
+    
+Bugs:
+    Scores don't save when you close application
 """
 import sys
 from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog, QComboBox
