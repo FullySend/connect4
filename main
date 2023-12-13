@@ -1,3 +1,21 @@
+"""
+ConnectFour
+
+Alberto Elizondo and Nick Muchiutti
+
+11-27-2023: ConnectFourGUI
+11-30-23: __init__, init_ui, handle_button_click
+12-3-2023: drop_piece, check_winner, update_button_visuals, display_winner, reset_game
+12-5-2023: MenuPage, __init__, init_ui, start_game, style_button
+12-6-2023: MenuPage styling, reset_scores, settings, load_scores, check_legal_move
+12-7-2023: ColorDialog, ColorSelectWidget, select_player1_color, select_player2_color
+12-10-2023: get_selected_size, update_selected_size, comfirm_selection
+
+Resources:
+    https://doc.qt.io/qtforpython-6/
+    https://doc.qt.io/
+    https://en.wikipedia.org/wiki/Connect_Four
+"""
 import sys
 from PySide6.QtWidgets import QApplication, QSizePolicy, QSpacerItem, QMainWindow, QGridLayout, QPushButton, QMessageBox, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QColorDialog, QDialog, QComboBox
 from PySide6.QtCore import QTimer, Qt
@@ -9,6 +27,9 @@ player1_color = "#FF0000"
 player2_color = "#FFFF00"
 
 class ColorDialog(QColorDialog):
+    """
+    Initialize the ColorDialog.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Choose your color")
@@ -16,6 +37,9 @@ class ColorDialog(QColorDialog):
 
 class ColorSelectWidget(QDialog):
     def __init__(self, parent=None):
+        """
+        Initialize the ColorSelectWidget.
+        """
         super().__init__(parent)
 
         layout = QVBoxLayout()
@@ -51,36 +75,56 @@ class ColorSelectWidget(QDialog):
         self.board_size_combo.currentIndexChanged.connect(self.update_selected_size)
 
     def select_player1_color(self):
+        """
+        Open a color dialog to select Player 1 color.
+        """
         global player1_color
         color_dialog = ColorDialog(self)
         if color_dialog.exec_() == ColorDialog.Accepted:
             player1_color = color_dialog.selectedColor().name()
 
     def select_player2_color(self):
+        """
+        Open a color dialog to select Player 2 color.
+        """
         global player2_color
         color_dialog = ColorDialog(self)
         if color_dialog.exec_() == ColorDialog.Accepted:
             player2_color = color_dialog.selectedColor().name()
     
-    def get_selected_size(self):
+    def get_selected_size(self) -> tuple:
+        """
+        Get the selected size from the combo box.
+        """
         return tuple(map(int, self.board_size_combo.currentText().split('x')))
 
     def update_selected_size(self):
+        """
+        Update the selected size based on the combo box selection.
+        """
         self.selected_size = self.get_selected_size()
     
     def confirm_selection(self):
-        # Add any actions you want to perform after confirmation
+        """
+        Confirm the selected options and perform any actions needed.
+        """
         print("Confirmed Selection")
         print("Selected Size:", self.selected_size)
         self.accept()
         
 class MenuPage(QMainWindow):
     def __init__(self):
+        """
+        Initialize the MenuPage.
+        """
         super().__init__()
 
         self.init_ui()
         
     def init_ui(self):
+        """
+        Initialize the user interface for the MenuPage.
+        """
         central_widget = QWidget()
         central_widget.setStyleSheet("background-color: lightgrey;")
         self.setCentralWidget(central_widget)
@@ -163,6 +207,9 @@ class MenuPage(QMainWindow):
         self.resize(560, 400)
 
     def start_game(self):
+        """
+        Start the Connect Four game with selected options.
+        """
         # Check if there is a saved state
         if hasattr(self, 'connect_four_game_state'):
             saved_state = self.connect_four_game_state
@@ -181,7 +228,10 @@ class MenuPage(QMainWindow):
         self.connect_four_game.show()
         self.hide()
     
-    def reset_score(self): # not reseting scores
+    def reset_score(self):
+        """
+        Reset the scores, color, and board; for Player 1 and Player 2.
+        """
         global player1_color, player2_color, player1, player2
         player1_color = "#FF0000"
         player2_color = "#FFFF00"
@@ -191,6 +241,9 @@ class MenuPage(QMainWindow):
         
         #self.save_scores(self.connect_four_game.player1, self.connect_four_game.player2)
     def settings(self):
+        """
+        Open the settings dialog.
+        """
         self.color_select_widget.show()
 
     
@@ -198,9 +251,10 @@ class MenuPage(QMainWindow):
             
 
 class ConnectFourGUI(QMainWindow):
-    #player1 = 0
-    #player2 = 0
     def __init__(self, rows, columns, menu_page):
+        """
+        Initialize the ConnectFourGUI.
+        """
         global player1, player2
         super().__init__()
         self.menu_page = menu_page
@@ -215,6 +269,9 @@ class ConnectFourGUI(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        """
+        Initialize the user interface for ConnectFourGUI.
+        """
         global player1, player2
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -266,11 +323,17 @@ class ConnectFourGUI(QMainWindow):
         central_widget.setLayout(main_layout)
     
     def main_menu(self):
+        """
+        Return to the main menu from the game.
+        """
         self.save_game()
         self.hide()
         self.menu_page.show()
         
     def style_button(self, button):
+        """
+        Apply styles to the game buttons.
+        """
         global player1_color, player2_color
         button.setFixedSize(50, 50)  # Set a fixed size for the button
         player_color = player1_color if self.player == 0 else player2_color
@@ -286,13 +349,24 @@ class ConnectFourGUI(QMainWindow):
         """)
         
         
-    def load_scores(self):
+    def load_scores(self): 
+        """
+        Load scores for Player 1 and Player 2.
+            *Bugs with Loading and saving between ran programs*
+        """
         global player1, player2
         return player1, player2
+    
     def check_legal_move(self, column):
+        """
+        Check if the move in the given column is legal.
+        """
         return 0 <= column < self.columns and self.board[0][column] == -1
-    # ... (rest of your ConnectFourGUI class)
+    
     def handle_button_click(self, row, col):
+        """
+        Handle the button click event by updating and redrawing GUI
+        """
         # Add logic to handle button click
         # such as update the board and redraw the GUI
         if not self.check_winner():
@@ -322,7 +396,9 @@ class ConnectFourGUI(QMainWindow):
             self.reset_game()
 
     def check_winner(self):
-
+        """
+        Check if there is a winner in the game.
+        """
         for i in range(self.rows):
             for j in range(self.columns):
                 # Check vertical
@@ -358,12 +434,18 @@ class ConnectFourGUI(QMainWindow):
            
         
     def show_winner(self):
+        """
+        Display the winner of the game.
+        """
         QMessageBox.information(self, "Winner!", f"The winner is {self.board[i][j]}!", QMessageBox.Ok)
         
         # Start a new game
         self.new_game()
         
     def drop_piece(self, player, column):
+        """
+        Drop a game piece in the specified column for the current player.
+        """
         for row in range(self.rows -1, -1, -1):
             if self.board[row][column] == -1:
                 self.board[row][column] = player
@@ -371,6 +453,9 @@ class ConnectFourGUI(QMainWindow):
                 break
 
     def update_button_visuals(self, row, col):
+        """
+        Update the visual appearance of the game button.
+        """
         global player1_color, player2_color
         player_color = player1_color if self.player == 0 else player2_color
         button = self.buttons[row * self.columns + col]
@@ -383,7 +468,6 @@ class ConnectFourGUI(QMainWindow):
         """)
         
         if (row, col) in self.winning_positions:
-             print("hi")
              for index in self.winning_positions:
                  row, col = index[0], index[1]
                  self.buttons[row * self.columns + col].setStyleSheet(f"""
@@ -396,15 +480,19 @@ class ConnectFourGUI(QMainWindow):
         self.winning_positions = []
         
     def is_board_full(self):
+        """
+        Check if the game board is full.
+        """
         for row in self.board:
             if -1 in row:
                 return False
         return True
 
-    def player_counter(self):
-        pass
        
     def display_winner(self, player):
+        """
+        Display the winner of the game.
+        """
         global player1, player2
         # Disable all buttons
         if player == 0:
@@ -423,8 +511,9 @@ class ConnectFourGUI(QMainWindow):
         
 
     def reset_game(self):
-        #self.menu_page.show()
-        #self.hide()
+        """
+        Reset the game state.
+        """
         self.rows, self.columns = self.get_selected_board_size()
         self.board = [[-1] * self.columns for _ in range(self.rows)]
         for button in self.buttons:
@@ -432,19 +521,23 @@ class ConnectFourGUI(QMainWindow):
             self.style_button(button)
         self.winning_title.setText("")
         print("Reset")
-        #self.player = 0
+
     
     def get_selected_board_size(self):
+        """
+        Get the selected board size from the menu page.
+        """
         selected_text = self.menu_page.color_select_widget.board_size_combo.currentText()
         self.rows, self.columns = int(self.rows), int(self.columns)
         rows, columns = map(int, selected_text.split('x'))
         return rows, columns
         
     def update_game_state(self, saved_state):
-        global player1, player2
         """
         Update the game state based on the loaded state.
+            *Bugs when saving and loading game*
         """
+        global player1, player2
         player1, player2, self.player, self.rows, self.columns, self.board = saved_state
 
         # Update the visual representation of the board
@@ -464,16 +557,18 @@ class ConnectFourGUI(QMainWindow):
     def load_game(self, saved_state):
         """
         Load the game state from a saved state.
+            *Bugs when saving and loading game*
         """
         self.update_game_state(saved_state)
         print(self.board)
 
 
     def save_game(self):
-        global player1, player2
         """
         Save the current game state.
+            *Bugs when saving and loading game*
         """
+        global player1, player2
         print(f"Saving {self.board}")
         return [player1, player2, self.player, self.rows, self.columns, self.board]
         
@@ -482,3 +577,4 @@ if __name__ == "__main__":
     menu = MenuPage()
     menu.show()
     sys.exit(app.exec())
+    
