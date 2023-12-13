@@ -1,1 +1,67 @@
+import doctest
+import unittest
+
+class ConnectFourGUITestCase(unittest.TestCase):
+    """
+    Tests for ConnectFourGUI methods.
+    """
+
+    def setUp(self):
+        """
+        Set up the initial game state.
+        """
+        self.game = ConnectFourGUI(rows=6, columns=7, menu_page=None)
+
+    def test_check_legal_move(self):
+        """
+        Test the check_legal_move method.
+
+        >>> game = ConnectFourGUI(rows=6, columns=7, menu_page=None)
+        >>> game.check_legal_move(0)
+        True
+
+        >>> game.check_legal_move(-1)
+        False
+
+        >>> for _ in range(6): game.board[0][0] = 1
+        >>> game.check_legal_move(0)
+        False
+        """
+
+    def test_handle_button_click(self):
+        """
+        Test the handle_button_click method.
+
+        >>> game = ConnectFourGUI(rows=6, columns=7, menu_page=None)
+        >>> game.handle_button_click(0, 0)
+        >>> game.board[5][0]  # Assuming 6 rows
+        0
+
+        >>> for _ in range(6): game.board[0][1] = 1
+        >>> game.handle_button_click(0, 1)
+        >>> game.board[5][1]
+        1
+        """
+
+    def test_check_winner(self):
+        """
+        Test the check_winner method.
+
+        >>> game = ConnectFourGUI(rows=6, columns=7, menu_page=None)
+        >>> game.check_winner()
+        False
+
+        >>> for i in range(4): game.board[0][i] = 0
+        >>> game.check_winner()
+        True
+
+        >>> game.board = [[-1] * 6 for _ in range(7)]
+        >>> for i in range(4): game.board[i][0] = 1
+        >>> game.check_winner()
+        True
+        """
+
+if __name__ == '__main__':
+    doctest.testmod()
+    unittest.main()
 
